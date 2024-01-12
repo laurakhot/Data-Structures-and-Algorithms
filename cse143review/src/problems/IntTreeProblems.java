@@ -28,7 +28,7 @@ public class IntTreeProblems {
      * (The root node is treated as having depth 1.)
      */
     public static int depthSum(IntTree tree) {
-         return depthSum(tree.overallRoot,1);
+         return depthSum(tree.overallRoot, 1);
     }
     private static int depthSum(IntTreeNode tree, int depth) {
         if (tree == null) {
