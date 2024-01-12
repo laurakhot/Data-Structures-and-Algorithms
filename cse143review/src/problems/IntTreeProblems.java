@@ -28,16 +28,34 @@ public class IntTreeProblems {
      * (The root node is treated as having depth 1.)
      */
     public static int depthSum(IntTree tree) {
-        // TODO replace this with your code
-        throw new UnsupportedOperationException("Not implemented yet.");
+         return depthSum(tree.overallRoot,1);
     }
+    private static int depthSum(IntTreeNode tree, int depth) {
+        if (tree == null) {
+            return 0;
+        } else {
+            int currentSum = tree.data * depth;
+            return currentSum + depthSum(tree.left, depth + 1) + depthSum(tree.right, depth + 1);
+        }
+    }
+
 
     /**
      * Removes all leaf nodes from the given tree.
      */
     public static void removeLeaves(IntTree tree) {
-        // TODO replace this with your code
-        throw new UnsupportedOperationException("Not implemented yet.");
+        tree.overallRoot = removeLeaves(tree.overallRoot);
+    }
+    private static IntTreeNode removeLeaves(IntTreeNode tree) {
+        if (tree != null) {
+            if (tree.left == null && tree.right == null) {
+                return null;
+            } else {
+                tree.right = removeLeaves(tree.right);
+                tree.left = removeLeaves(tree.left);
+            }
+        }
+        return tree;
     }
 
     /**
@@ -45,7 +63,19 @@ public class IntTreeProblems {
      * (The resulting tree is still a BST.)
      */
     public static void trim(IntTree tree, int min, int max) {
-        // TODO replace this with your code
-        throw new UnsupportedOperationException("Not implemented yet.");
+        tree.overallRoot = trim(tree.overallRoot, min, max);
+    }
+    private static IntTreeNode trim(IntTreeNode tree, int min, int max) {
+        if (tree != null) {
+            if (tree.data < min) {
+                return trim(tree.right, min, max);
+            } else if (tree.data > max) {
+                return trim(tree.left, min, max);
+            } else {
+                tree.left = trim(tree.left, min, max);
+                tree.right = trim(tree.right, min, max);
+            }
+        }
+        return tree;
     }
 }

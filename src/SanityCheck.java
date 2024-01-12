@@ -19,7 +19,7 @@ public class SanityCheck {
         // We use these to mark where we expect you to write code, so remember to remove them before submitting.
         ArrayList<String> a = new ArrayList<>();
         a.add("test"); // Deliberately long line: ............................................................................................... end
-        System.out.println( !a.isEmpty());
+        System.out.println(!a.isEmpty());
 
         // The following line should produce an error when not commented.
         // List l = new ArrayList();
