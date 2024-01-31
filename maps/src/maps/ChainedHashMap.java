@@ -1,15 +1,15 @@
 package maps;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 /**
  * @see AbstractIterableMap
  * @see Map
  */
 public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
-    private static double DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD = 1;
+    private static double DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD = 0.8;
     private static final int DEFAULT_INITIAL_CHAIN_COUNT = 10;
     private static final int DEFAULT_INITIAL_CHAIN_CAPACITY = 5;
     private int givenChainCapacity;
@@ -46,6 +46,7 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
     public ChainedHashMap(double resizingLoadFactorThreshold, int initialChainCount, int chainInitialCapacity) {
         DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD = resizingLoadFactorThreshold;
         this.chains = createArrayOfChains(initialChainCount);
+
         givenChainCapacity = chainInitialCapacity;
         size = 0;
     }
@@ -78,134 +79,105 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
 
     @Override
     public V get(Object key) {
-        AbstractIterableMap<K, V> arr = chains[hash(key)];
-        if (arr[0].getKey().equals(key)) {
-            return arr[0].getValue();
-        } else {
-            for (int i = 1; i < arr.size(); i++) {
-                if (arr[i].getKey().equals(key)) {
-                    return arr[i].getValue();
-                }
+        AbstractIterableMap<K, V> arrMap = chains[hash(key)];
+        for (Map.Entry<K, V> entry: arrMap) {
+            if (entry != null && entry.getKey().equals(key)) {
+                return entry.getValue();
             }
         }
         return null;
     }
-
 
     @Override
     public V put(K key, V value) {
         if (loadFactor()) {
-            // resize
-            int newSize = DEFAULT_INITIAL_CHAIN_COUNT * 2;
+            //AbstractIterableMap<K, V>[] oldMap = chains;
+            int newSize = chains.length * 2;
             AbstractIterableMap<K, V>[] newArr = createArrayOfChains(newSize);
-            for (int i = 0; i < chains.length; i++) {
-                if (chains[i] != null) {
-                    // array map iteraor to get element out, then rehash
-                    // helper method for put(key, value, newChains)
-                    // save old map in reference
-                    // reassign chain to larger map
-                    // for every entry call put  and rehash
-                    AbstractIterableMap<K, V> toLoop = chains[i]; // chain that looping over
-                    SimpleEntry<>(key, value) entry = new SimpleEntry<>(toLoop[i].getKey(), toLoop[i].getValue());
-                    AbstractIterableMap<K, V> chain = createChain(givenChainCapacity); // chain that adding to
-                    if (chain.size() == 1) {
-                        int index = hash(toLoop[0].getkey());
-                        newArr[index] = chain;
-                        chain[0] = entry;
-                    } else {
-                        for (int j = 0; j < chain.size(); j++) {
-                            int index = hash(chain[j].getkey());
-
-                        }
-                    }
+            for (AbstractIterableMap<K, V> arrMap : chains) {
+                for (Entry<K, V> entry : arrMap) {
+                    copy(entry.getKey(), entry.getValue(), newArr);
                 }
+            }
+            chains = newArr;
+        }
+        int index = hash(key);
+        AbstractIterableMap<K, V> arrMap = chains[index];
+        for (Map.Entry<K, V> entry : arrMap) {
+            if (entry.getKey().equals(key)) {
+                V result = entry.getValue();
+                entry.setValue(value);
+                return result;
             }
         }
-        // adding
+        // mapping doesn't exist
+        if (arrMap == null) {
+            AbstractIterableMap<K, V> chain = createChain(givenChainCapacity);
+            arrMap = chain;
+        }
+        arrMap.put(key, value);
+        // would it return something so never reach the other return statement? same with remove?
+        size++;
+        return null;
+    }
+
+    private void copy(K key, V value, AbstractIterableMap<K, V>[] arr) {
         int index = hash(key);
-        if (chains[index] == null && !loadFactor()) {
-            AbstractIterableMap<K, V> arrayMap = createChain(givenChainCapacity);
-            chains[index] = arrayMap;
-            arrayMap[0] = new SimpleEntry<>(key, value);
-            size++;
-            return null;
-        } else {
-            // replace -> at front
-            AbstractIterableMap<K, V> arr = chains[index];
-            if (arr[0].getKey().equals(key)) {
-                V oldVal = arr[0].getValue();
-                arr[0].setValue(value);
-                return oldVal;
+        if (arr[index] == null) {
+            AbstractIterableMap<K, V> chain = createChain(givenChainCapacity);
+            arr[index] = chain;
+        }
+        for (Map.Entry<K, V> entry: arr[index]) {
+            if (entry == null) {
+                arr[index].put(key, value);
             }
-            // replace -> entire chain
-            int i = 1;
-            while (currEntry.hasNext()) {
-                if (arr[i].getKey().equals(key)) {
-                V oldVal = arr[i].getValue();
-                arr[i].setValue(value);
-                return oldVal;
-                } else {
-                    currEntry = currEntry.next;
-                    i++;
+        }
+    }
+
+    private boolean loadFactor() {
+        return (double) size / chains.length > DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD;
+    }
+
+    private int hash(Object key) {
+        int hashCode = key.hashCode();
+        return hashCode % chains.length;
+    }
+
+    @Override
+    // issue with swapping the last element with the one being removed (iterator)
+    public V remove(Object key) {
+        AbstractIterableMap<K, V> arrMap = chains[hash(key)];
+        Iterator<Map.Entry<K, V>> iterator = chains[hash(key)].iterator();
+        Entry<K, V> last = null;
+        while (iterator.hasNext()) {
+            last = iterator.next();
+        }
+        for (Map.Entry<K, V> entry: arrMap) {
+            if (entry.getKey().equals(key)) {
+                size--;
+                V result = entry.getValue();
+                entry = last;
+                if (last != null) {
+                    arrMap.remove(last.getKey()); // can do this???
                 }
+                return result;
             }
         }
         return null;
     }
 
-    private boolean loadFactor() {
-        return (double) size / DEFAULT_INITIAL_CHAIN_COUNT > DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD;
-    }
-
-    private int hash(Object key) {
-        int hashCode = key.hashCode();
-        return hashCode % givenChainCapacity;
-    }
-
-    @Override
-    public V remove(Object key) {
-        AbstractIterableMap<K, V> arr = chains[hash(key)];
-        if (arr[0].getKey().equals(key)) {
-            arr[0] = null;
-            size--;
-            return arr[0].getValue();
-        } else {
-            int full = 0;
-            while(currEntry.hasNext()) {
-                full++;
-                currEntry = currEntry.next;
-            }
-            for (int i = 0; i < arr.size(); i++) {
-                if (arr[i].getKey().equals(key)) {
-                    V result = arr[i].getValue();
-                    if (i != full - 1) {
-                        arr[i] = arr[full - 1];
-                        arr[full-1] = null;
-                    } else {
-                        arr[i] = null;
-                    }
-                    return result;
-                }
-            }
-            return null;
-        }
-    }
 
     @Override
     public void clear() {
-        //int num = DEFAULT_INITIAL_CHAIN_COUNT;
-        // AbstractIterableMap<K, V>[num];
-        chains = new ChainedHashMap();
+        chains = createArrayOfChains(DEFAULT_INITIAL_CHAIN_COUNT);
+        size = 0;
     }
 
     @Override
     public boolean containsKey(Object key) {
-        AbstractIterableMap<K, V> arr = chains[hash(key)];
-        if (arr[0].getKey().equals(key)) {
-            return true;
-        }
-        for (int i = 1; i < arr.size(); i++) {
-            if (arr[i].getKey().equals(key)) {
+        AbstractIterableMap<K, V> arrMap = chains[hash(key)];
+        for (Map.Entry<K, V> entry: arrMap) {
+            if (entry.getKey().equals(key)) {
                 return true;
             }
         }
@@ -223,48 +195,32 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
         return new ChainedHashMapIterator<>(this.chains);
     }
 
-    // // TODO: after you implement the iterator, remove this toString implementation
-    // // Doing so will give you a better string representation for assertion errors the debugger.
-    // @Override
-    // public String toString() {
-    //     return super.toString();
-    // }
-
     /*
     See the assignment webpage for tips and restrictions on implementing this iterator.
      */
     private static class ChainedHashMapIterator<K, V> implements Iterator<Map.Entry<K, V>> {
-        private int currEntry;
-
         private int currChain;
+
+        private Entry<K, V> currEntry;
+        private int nextChain;
 
         private AbstractIterableMap<K, V>[] chains;
         // You may add more fields and constructor parameters
-        private int size;
 
         public ChainedHashMapIterator(AbstractIterableMap<K, V>[] chains) {
             this.chains = chains;
             this.currChain = 0;
-            AbstractIterableMap<K, V> arr = chains[0];
-            this.currEntry = 0;
-            this.size = size;
+            this.nextChain = 0;
+            this.currEntry = null;
         }
 
         @Override
         public boolean hasNext() {
-            if (chains[currChain] != null) {
-                AbstractIterableMap<K, V> chain = chains[currChain];
-                if (currEntry < chain.size() - 1) {
-                    if (chain[currEntry + 1] != null) {
-                        currEntry += 1;
-                        return true;
-                    }
+            while (nextChain < chains.length) {
+                if (chains[nextChain] == null) {
+                    nextChain++;
                 } else {
-                    currEntry = 0;
-                    currChain += 1;
-                    while (chains[currChain] == null & currChain <= chains.length()) {
-                        currChain += 1;
-                    }
+                    nextChain++;
                     return true;
                 }
             }
@@ -273,14 +229,34 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
 
         @Override
         public Map.Entry<K, V> next() {
-            if (hasNext()) {
-                hasNext();
-
-                if (currEntry )
-                AbstractIterableMap<K, V> chain = chains[currChain];
-
-                return chain[currEntry + 1];
+            if (!hasNext()) {
+                throw new NoSuchElementException();
             }
+
+            AbstractIterableMap<K, V> arrMap = chains[currChain];
+            Iterator<Map.Entry<K, V>> iterator = arrMap.iterator();
+            // move to the next non-null chain
+            if (currEntry == null || !iterator.hasNext()) {
+                while (arrMap == null && currChain < chains.length) {
+                    currChain++;
+                    arrMap = chains[currChain];
+                }
+                iterator = arrMap.iterator();
+                currEntry = iterator.next();
+                return currEntry;
+
+            // } else {
+            //     if (iterator.next() == null) {
+            //         while(chains[currChain] == null) {
+            //             currChain++;
+            //         }
+            //         arrMap = chains[currChain];
+            //         currEntry = iterator.next();
+            //         return currEntry;
+            } else {
+                currEntry = iterator.next();
+            }
+            return currEntry;
         }
     }
 }
