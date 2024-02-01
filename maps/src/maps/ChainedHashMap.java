@@ -192,7 +192,7 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
         @Override
         public boolean hasNext() {
             while (currChain < chains.length) {
-                if (chains[currChain] != null && chains[currChain].size() != 0) {
+                if (chains[currChain] != null && !chains[currChain].isEmpty()) {
                     if (iterator == null) {
                         iterator = chains[currChain].iterator();
                     }
