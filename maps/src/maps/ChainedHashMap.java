@@ -92,7 +92,7 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
             return arrMap.put(key, value);
         } else {
             if (loadFactor()) {
-                int newSize = size * 2 -1;
+                int newSize = chains.length * 2 + 1;
                 AbstractIterableMap<K, V>[] newArr = createArrayOfChains(newSize);
                 for (AbstractIterableMap<K, V> arrMap : chains) {
                     if (arrMap != null) {
