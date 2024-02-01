@@ -43,7 +43,7 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
      *                             Must be > 0.
      */
     public ChainedHashMap(double resizingLoadFactorThreshold, int initialChainCount, int chainInitialCapacity) {
-        DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD = resizingLoadFactorThreshold;
+        DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD  = resizingLoadFactorThreshold;
         this.chains = createArrayOfChains(initialChainCount);
         this.givenChainCapacity = chainInitialCapacity;
         size = 0;
@@ -92,7 +92,7 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
             return arrMap.put(key, value);
         } else {
             if (loadFactor()) {
-                int newSize = chains.length * 2;
+                int newSize = size * 2 -1;
                 AbstractIterableMap<K, V>[] newArr = createArrayOfChains(newSize);
                 for (AbstractIterableMap<K, V> arrMap : chains) {
                     if (arrMap != null) {
@@ -122,7 +122,7 @@ public class ChainedHashMap<K, V> extends AbstractIterableMap<K, V> {
     }
 
     private boolean loadFactor() {
-        return (double) size / chains.length > DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD;
+        return (double) size / chains.length >= DEFAULT_RESIZING_LOAD_FACTOR_THRESHOLD;
     }
 
     private int hash(Object key, AbstractIterableMap<K, V>[] arr) {
