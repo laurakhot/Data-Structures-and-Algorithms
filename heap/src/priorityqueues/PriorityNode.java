@@ -32,4 +32,7 @@ class PriorityNode<T> {
             ", priority=" + priority +
             '}';
     }
+
+    // public boolean priority() {
+    // }
 }
