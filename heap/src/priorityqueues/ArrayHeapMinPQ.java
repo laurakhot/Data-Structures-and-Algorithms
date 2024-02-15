@@ -108,13 +108,13 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
             int leftChild;
             int rightChild;
 
-            if ((tempIndex - 1) / 2) >= 0) {
+            if (((tempIndex - 1) / 2) >= 0) {
                 parentIndex = (tempIndex - 1) / 2;
             }
-            if ((tempIndex * 2) + 1) {
+            if (((tempIndex * 2) + 1) {
                 leftChild = tempIndex * 2 + 1;
             }
-            if ((tempIndex * 2) + 2) {
+            if (((tempIndex * 2) + 2) {
                 rightChild = tempIndex * 2 + 2;
             }
             while (items.get(parentIndex).getPriority() > priority || priority > items.get(leftChild).getPriority()
