@@ -38,7 +38,7 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     @Override
     public void add(T item, double priority) {
         PriorityNode<T> node = new PriorityNode<>(item, priority);
-        items.set(size, node);
+        items.add(size, node);
         hash.put(item, priority);
         size++;
         int currIndex = size - 1;
@@ -71,25 +71,28 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
             size--;
             T result = items.get(0).getItem();
             items.set(0, items.get(size));
+            items.remove(size);
+            hash.remove(result);
             int currIndex = 0;
             PriorityNode<T> leftChild = items.get(1);
             PriorityNode<T> rightChild = items.get(2);
             while ((items.get(currIndex).getPriority() > leftChild.getPriority())
                     || (items.get(currIndex).getPriority() > rightChild.getPriority())) {
-                if (((currIndex * 2) + 2) < size) {
-                    if (rightChild.getPriority() > leftChild.getPriority()) {
-                        int leftIndex = currIndex * 2 + 1;
-                        swap(currIndex, leftIndex);
+                if (rightChild.getPriority() > leftChild.getPriority() && currIndex * 2 + 1 < size) {
+                    int leftIndex = currIndex * 2 + 1;
+                    swap(currIndex, leftIndex);
+                    if (currIndex * 2 + 1 < size) {
                         currIndex = leftIndex;
                         leftChild = items.get(currIndex * 2 + 1);
-                    } else if (rightChild.getPriority() < leftChild.getPriority()) {
-                        int rightIndex = currIndex * 2 + 2;
-                        swap(currIndex, rightIndex);
+                    }
+                } else if (rightChild.getPriority() < leftChild.getPriority() && currIndex * 2 + 2 < size) {
+                    int rightIndex = currIndex * 2 + 2;
+                    swap(currIndex, rightIndex);
+                    if (currIndex * 2 + 2 < size) {
                         currIndex = rightIndex;
                         rightChild = items.get(currIndex * 2 + 2);
                     }
                 }
-
             }
             return result;
         }
@@ -98,7 +101,45 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
     @Override
     public void changePriority(T item, double priority) {
+        if (hash.containsKey(item)) {
+            int tempIndex = items.indexOf(item);
+            items.get(items.indexOf(item)).setPriority(priority);
+            int parentIndex;
+            int leftChild;
+            int rightChild;
 
+            if (((tempIndex - 1) / 2) >= 0) {
+                parentIndex = (tempIndex - 1) / 2;
+            }
+            if (((tempIndex * 2) + 1) {
+                leftChild = tempIndex * 2 + 1;
+            }
+            if (((tempIndex * 2) + 2) {
+                rightChild = tempIndex * 2 + 2;
+            }
+            while (items.get(parentIndex).getPriority() > priority || priority > items.get(leftChild).getPriority()
+                || priority > items.get(rightChild).getPriority()) {
+                if (items.get(parentIndex).getPriority() > priority) {
+                    swap(parentIndex, tempIndex);
+                    tempIndex = parentIndex;
+                    if (((tempIndex - 1) / 2) >= 0) {
+                        parentIndex = (tempIndex - 1) / 2;
+                    }
+                } else if (priority > items.get(leftChild).getPriority()) {
+                    swap(tempIndex, leftChild);
+                    tempIndex = leftChild;
+                    if (tempIndex * 2 + 1 < size) {
+                        leftChild = tempIndex * 2 + 1;
+                    }
+                } else if (priority > items.get(rightChild).getPriority()) {
+                    swap(tempIndex, rightChild;
+                        tempIndex = rightChild;
+                    if (tempIndex * 2 + 2 < size) {
+                        rightChild = tempIndex * 2 + 2;
+                    }
+                }
+            }
+        }
     }
 
     @Override
