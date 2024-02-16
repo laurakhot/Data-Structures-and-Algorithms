@@ -3,6 +3,7 @@ package priorityqueues;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 /**
  * @see ExtrinsicMinPQ
@@ -10,9 +11,9 @@ import java.util.List;
 public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     // IMPORTANT: Do not rename these fields or change their visibility.
     // We access these during grading to test your code.
-    static final int START_INDEX = 0;
+    static final int START_INDEX = 1;
     public int size;
-    public HashMap<T, Double> hash;
+    public HashMap<T, Integer> hash;
 
     // public int currIndex;
     List<PriorityNode<T>> items;
@@ -21,6 +22,7 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     public ArrayHeapMinPQ() {
         items = new ArrayList<>();
         size = 0;
+        items.add(null);
         hash = new HashMap<>();
     }
 
@@ -33,25 +35,40 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         PriorityNode<T> temp = items.get(a);
         items.set(a, items.get(b));
         items.set(b, temp);
+        hash.put(items.get(b).getItem(), b);
+        hash.put(items.get(a).getItem(), a);
     }
 
+    // @Override
+    // public void add(T item, double priority) {
+    //     PriorityNode<T> node = new PriorityNode<>(item, priority);
+    //     items.add(node);
+    //     size++;
+    //     hash.put(item, size);
+    //     int currIndex = size;
+    //     if (size > 1) {
+    //         PriorityNode<T> parent = items.get(hash.get(item) / 2);
+    //         while (parent.getPriority() > node.getPriority()) {
+    //             if (currIndex / 2 > 0) {
+    //                 swap(currIndex, (currIndex) / 2);
+    //                 currIndex = (currIndex) / 2;
+    //                 parent = items.get((currIndex) / 2);
+    //                 node = items.get(currIndex);
+    //             }
+    //         }
+    //     }
+    // }
     @Override
     public void add(T item, double priority) {
+        if (item == null || hash.containsKey(item)) {
+            throw new IllegalArgumentException();
+        }
         PriorityNode<T> node = new PriorityNode<>(item, priority);
-        items.add(size, node);
-        hash.put(item, priority);
+        items.add(node);
         size++;
-        int currIndex = size - 1;
+        hash.put(item, size);
         if (size > 1) {
-            PriorityNode<T> parent = items.get((items.indexOf(item) - 1) / 2);
-            while (parent.getPriority() > node.getPriority()) {
-                if ((currIndex - 1)/ 2 >= 0){
-                    swap(currIndex, (currIndex - 1) / 2);
-                    currIndex = (currIndex - 1) / 2;
-                    parent = items.get((currIndex - 1) / 2);
-                    node = items.get(currIndex);
-                }
-            }
+            percolateUp(size);
         }
     }
 
@@ -62,82 +79,92 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
     @Override
     public T peekMin() {
-        return items.get(0).getItem();
+        if (size == 0) {
+            throw new NoSuchElementException();
+        }
+        return items.get(1).getItem();
     }
 
     @Override
     public T removeMin() {
-        if (size != 0) {
-            size--;
-            T result = items.get(0).getItem();
-            items.set(0, items.get(size));
-            items.remove(size);
+        if (size == 0) {
+            throw new NoSuchElementException();
+        }
+        T result = items.get(1).getItem(); // Store the item at the root
+        if (size == 1) {
+            items.remove(1);
             hash.remove(result);
-            int currIndex = 0;
-            PriorityNode<T> leftChild = items.get(1);
-            PriorityNode<T> rightChild = items.get(2);
-            while ((items.get(currIndex).getPriority() > leftChild.getPriority())
-                    || (items.get(currIndex).getPriority() > rightChild.getPriority())) {
-                if (rightChild.getPriority() > leftChild.getPriority() && currIndex * 2 + 1 < size) {
-                    int leftIndex = currIndex * 2 + 1;
-                    swap(currIndex, leftIndex);
-                    if (currIndex * 2 + 1 < size) {
-                        currIndex = leftIndex;
-                        leftChild = items.get(currIndex * 2 + 1);
-                    }
-                } else if (rightChild.getPriority() < leftChild.getPriority() && currIndex * 2 + 2 < size) {
-                    int rightIndex = currIndex * 2 + 2;
-                    swap(currIndex, rightIndex);
-                    if (currIndex * 2 + 2 < size) {
-                        currIndex = rightIndex;
-                        rightChild = items.get(currIndex * 2 + 2);
-                    }
-                }
-            }
+            size--;
             return result;
         }
-        return null;
+        if (size > 1) { // Check if there are elements to remove
+            items.set(1, items.get(size)); // Replace the root with the last element
+            items.remove(size); // Remove the last element
+            hash.remove(result); // Remove the item from the hash map
+            size--; // Decrease the size
+            percolateDown(1);
+
+            return result; // Return the removed item
+        }
+        return null; // Return null if the heap is empty
     }
 
     @Override
     public void changePriority(T item, double priority) {
-        if (hash.containsKey(item)) {
-            int tempIndex = items.indexOf(item);
-            items.get(items.indexOf(item)).setPriority(priority);
-            int parentIndex;
-            int leftChild;
-            int rightChild;
+        if (!hash.containsKey(item)) {
+            throw new NoSuchElementException();
+        }
+        int tempIndex = hash.get(item);
+        items.get(hash.get(item)).setPriority(priority);
+        PriorityNode<T> node = items.get(tempIndex);
 
-            if (((tempIndex - 1) / 2) >= 0) {
-                parentIndex = (tempIndex - 1) / 2;
+        int parentIndex;
+        int leftChild;
+        int rightChild;
+
+        if (((tempIndex) / 2) >= 1) {
+            parentIndex = (tempIndex) / 2;
+            PriorityNode<T> parent = items.get(parentIndex);
+            if (parent.getPriority() > node.getPriority()) {
+                percolateUp(tempIndex);
             }
-            if (((tempIndex * 2) + 1) {
-                leftChild = tempIndex * 2 + 1;
+        } else if (tempIndex * 2 <= size) {
+            percolateDown(tempIndex);
+        }
+    }
+    public void percolateUp(int index) {
+        int currIndex = index;
+        while (currIndex > 1) {
+            int parentIndex = currIndex / 2;
+            PriorityNode<T> parent = items.get(parentIndex);
+            PriorityNode<T> node = items.get(currIndex);
+            if (parent.getPriority() > node.getPriority()) {
+                swap(currIndex, parentIndex);
+                currIndex = parentIndex;
+            } else {
+                break;
             }
-            if (((tempIndex * 2) + 2) {
-                rightChild = tempIndex * 2 + 2;
+        }
+
+    }
+    public void percolateDown(int index) {
+        int currIndex = index; // Start from the root
+        while (currIndex * 2 <= size) { // While the current node has at least one child
+            int leftIndex = currIndex * 2;
+            int rightIndex = currIndex * 2 + 1;
+            int minChildIndex = leftIndex; // Assume left child is the minimum
+
+            // Check if the right child exists and has smaller priority
+            if (rightIndex < size && items.get(rightIndex).getPriority() < items.get(leftIndex).getPriority()) {
+                minChildIndex = rightIndex;
             }
-            while (items.get(parentIndex).getPriority() > priority || priority > items.get(leftChild).getPriority()
-                || priority > items.get(rightChild).getPriority()) {
-                if (items.get(parentIndex).getPriority() > priority) {
-                    swap(parentIndex, tempIndex);
-                    tempIndex = parentIndex;
-                    if (((tempIndex - 1) / 2) >= 0) {
-                        parentIndex = (tempIndex - 1) / 2;
-                    }
-                } else if (priority > items.get(leftChild).getPriority()) {
-                    swap(tempIndex, leftChild);
-                    tempIndex = leftChild;
-                    if (tempIndex * 2 + 1 < size) {
-                        leftChild = tempIndex * 2 + 1;
-                    }
-                } else if (priority > items.get(rightChild).getPriority()) {
-                    swap(tempIndex, rightChild;
-                        tempIndex = rightChild;
-                    if (tempIndex * 2 + 2 < size) {
-                        rightChild = tempIndex * 2 + 2;
-                    }
-                }
+
+            // Check if the current node's priority is greater than the minimum child's priority
+            if (items.get(currIndex).getPriority() > items.get(minChildIndex).getPriority()) {
+                swap(currIndex, minChildIndex); // Swap the current node with the minimum child
+                currIndex = minChildIndex; // Update the current index to the position of the minimum child
+            } else {
+                break; // Break the loop if the current node is smaller than its children
             }
         }
     }
@@ -147,3 +174,4 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         return size;
     }
 }
+
