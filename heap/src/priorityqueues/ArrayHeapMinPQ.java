@@ -100,20 +100,6 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
         percolateUp(tempIndex);
         percolateDown(tempIndex);
-
-        // int parentIndex;
-        // int leftChild;
-        // int rightChild;
-        //
-        // if (((tempIndex) / 2) >= 1) {
-        //     parentIndex = (tempIndex) / 2;
-        //     PriorityNode<T> parent = items.get(parentIndex);
-        //     if (parent.getPriority() > node.getPriority()) {
-        //         percolateUp(tempIndex);
-        //     }
-        // }  else if (tempIndex * 2 <= size) {
-        //     percolateDown(tempIndex);
-        // }
     }
     public void percolateUp(int index) {
         int currIndex = index;
@@ -128,8 +114,8 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
                 break;
             }
         }
-
     }
+
     public void percolateDown(int index) {
         int currIndex = index; // Start from the root
         while (currIndex * 2 <= size) { // While the current node has at least one child
