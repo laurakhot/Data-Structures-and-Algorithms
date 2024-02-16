@@ -39,39 +39,6 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         hash.put(items.get(a).getItem(), a);
     }
 
-    // @Override
-    // public void add(T item, double priority) {
-    //     PriorityNode<T> node = new PriorityNode<>(item, priority);
-    //     items.add(node);
-    //     size++;
-    //     hash.put(item, size);
-    //     int currIndex = size;
-    //     if (size > 1) {
-    //         PriorityNode<T> parent = items.get(hash.get(item) / 2);
-    //         while (parent.getPriority() > node.getPriority()) {
-    //             if (currIndex / 2 > 0) {
-    //                 swap(currIndex, (currIndex) / 2);
-    //                 currIndex = (currIndex) / 2;
-    //                 parent = items.get((currIndex) / 2);
-    //                 node = items.get(currIndex);
-    //             }
-    //         }
-    //     }
-    // }
-    @Override
-    public void add(T item, double priority) {
-        if (item == null || hash.containsKey(item)) {
-            throw new IllegalArgumentException();
-        }
-        PriorityNode<T> node = new PriorityNode<>(item, priority);
-        items.add(node);
-        size++;
-        hash.put(item, size);
-        if (size > 1) {
-            percolateUp(size);
-        }
-    }
-
     @Override
     public boolean contains(T item) {
         return hash.containsKey(item);
@@ -86,6 +53,22 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     }
 
     @Override
+    public int size() {
+        return size;
+    }
+
+    @Override
+    public void add(T item, double priority) {
+        if (item == null || hash.containsKey(item)) {
+            throw new IllegalArgumentException();
+        }
+        PriorityNode<T> node = new PriorityNode<>(item, priority);
+        items.add(node);
+        size++;
+        hash.put(item, size);
+        percolateUp(size);
+    }
+    @Override
     public T removeMin() {
         if (size == 0) {
             throw new NoSuchElementException();
@@ -95,7 +78,6 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
             items.remove(1);
             hash.remove(result);
             size--;
-            return result;
         }
         if (size > 1) { // Check if there are elements to remove
             items.set(1, items.get(size)); // Replace the root with the last element
@@ -103,10 +85,8 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
             hash.remove(result); // Remove the item from the hash map
             size--; // Decrease the size
             percolateDown(1);
-
-            return result; // Return the removed item
         }
-        return null; // Return null if the heap is empty
+        return result; // Return the removed item
     }
 
     @Override
@@ -118,19 +98,22 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         items.get(hash.get(item)).setPriority(priority);
         PriorityNode<T> node = items.get(tempIndex);
 
-        int parentIndex;
-        int leftChild;
-        int rightChild;
+        percolateUp(tempIndex);
+        percolateDown(tempIndex);
 
-        if (((tempIndex) / 2) >= 1) {
-            parentIndex = (tempIndex) / 2;
-            PriorityNode<T> parent = items.get(parentIndex);
-            if (parent.getPriority() > node.getPriority()) {
-                percolateUp(tempIndex);
-            }
-        }  else if (tempIndex * 2 <= size) {
-            percolateDown(tempIndex);
-        }
+        // int parentIndex;
+        // int leftChild;
+        // int rightChild;
+        //
+        // if (((tempIndex) / 2) >= 1) {
+        //     parentIndex = (tempIndex) / 2;
+        //     PriorityNode<T> parent = items.get(parentIndex);
+        //     if (parent.getPriority() > node.getPriority()) {
+        //         percolateUp(tempIndex);
+        //     }
+        // }  else if (tempIndex * 2 <= size) {
+        //     percolateDown(tempIndex);
+        // }
     }
     public void percolateUp(int index) {
         int currIndex = index;
@@ -155,7 +138,7 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
             int minChildIndex = leftIndex; // Assume left child is the minimum
 
             // Check if the right child exists and has smaller priority
-            if (rightIndex < size && items.get(rightIndex).getPriority() < items.get(leftIndex).getPriority()) {
+            if (rightIndex <= size && items.get(rightIndex).getPriority() < items.get(leftIndex).getPriority()) {
                 minChildIndex = rightIndex;
             }
 
@@ -167,11 +150,6 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
                 break; // Break the loop if the current node is smaller than its children
             }
         }
-    }
-
-    @Override
-    public int size() {
-        return size;
     }
 }
 
