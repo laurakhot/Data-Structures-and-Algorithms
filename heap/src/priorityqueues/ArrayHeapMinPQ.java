@@ -15,7 +15,6 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     public int size;
     public HashMap<T, Integer> hash;
 
-    // public int currIndex;
     List<PriorityNode<T>> items;
 
 
