@@ -114,16 +114,16 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
         if (!hash.containsKey(item)) {
             throw new NoSuchElementException();
         }
-        int tempIndex = hash.get(item);
-        items.get(hash.get(item)).setPriority(priority);
+        int tempIndex = items.indexOf(item);
+        items.get(tempIndex).setPriority(priority);
         PriorityNode<T> node = items.get(tempIndex);
 
-        int parentIndex;
-        int leftChild;
-        int rightChild;
+        // int parentIndex;
+        // int leftChild;
+        // int rightChild;
 
         if (((tempIndex) / 2) >= 1) {
-            parentIndex = (tempIndex) / 2;
+            int parentIndex = (tempIndex) / 2;
             PriorityNode<T> parent = items.get(parentIndex);
             if (parent.getPriority() > node.getPriority()) {
                 percolateUp(tempIndex);
