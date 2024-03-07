@@ -50,28 +50,31 @@ public class DijkstraShortestPathFinder<G extends Graph<V, E>, V, E extends Base
         V explore;
 
         // while (!pq.isEmpty()) {
-        while (!known.contains(end)) {
-            if (!pq.isEmpty()) { // need this? //when would pq be empty when start != end (disconnected graphs)
-                explore = pq.removeMin();
-                Collection<E> outEdges = new ArrayList<>(graph.outgoingEdgesFrom(explore));
+        while (!pq.isEmpty()) {
+            // need this? //when would pq be empty when start != end (disconnected graphs)
+            explore = pq.removeMin();
+            if (explore.equals(end)) {
+                break;
+            }
+            Collection<E> outEdges = new ArrayList<>(graph.outgoingEdgesFrom(explore));
 
-                for (E edge : outEdges) {
-                    double oldDist = distTo.getOrDefault(edge.to(), Double.POSITIVE_INFINITY);
-                    double newDist = distTo.get(edge.from()) + edge.weight();
-                    if (!pq.contains(edge.to()) && !known.contains(edge.to())) {
-                        pq.add(edge.to(), oldDist);
-                    }
+            for (E edge : outEdges) {
+                double oldDist = distTo.getOrDefault(edge.to(), Double.POSITIVE_INFINITY);
+                double newDist = distTo.get(edge.from()) + edge.weight();
 
-                    if (newDist < oldDist) {
-                        distTo.put(edge.to(), newDist);
-                        edgeTo.put(edge.to(), edge);
+                if (newDist < oldDist) {
+                    distTo.put(edge.to(), newDist);
+                    edgeTo.put(edge.to(), edge);
+                    if (!pq.contains(edge.to())) {
+                        pq.add(edge.to(), newDist);
+                    } else {
                         pq.changePriority(edge.to(), newDist);
                     }
                 }
-                known.add(explore);
-           }
+            }
+            known.add(explore);
         }
-        System.out.println("done with loop");
+        // System.out.println("done with loop");
         return edgeTo;
     }
     @Override
