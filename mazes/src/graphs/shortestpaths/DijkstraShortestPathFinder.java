@@ -47,19 +47,18 @@ public class DijkstraShortestPathFinder<G extends Graph<V, E>, V, E extends Base
         HashMap<V, Double> distTo = new HashMap<>();
         distTo.put(start, 0.0);
         HashMap<V, E> edgeTo = new HashMap<>();
-        // edgeTo.put(start, null); // need this?
+        V explore;
 
+        // while (!pq.isEmpty()) {
         while (!known.contains(end)) {
-            V explore = start;
             if (!pq.isEmpty()) { // need this? //when would pq be empty when start != end (disconnected graphs)
                 explore = pq.removeMin();
                 Collection<E> outEdges = new ArrayList<>(graph.outgoingEdgesFrom(explore));
-                known.add(explore);
 
                 for (E edge : outEdges) {
                     double oldDist = distTo.getOrDefault(edge.to(), Double.POSITIVE_INFINITY);
                     double newDist = distTo.get(edge.from()) + edge.weight();
-                    if (!pq.contains(edge.to()) & !known.contains(edge.to())) {
+                    if (!pq.contains(edge.to()) && !known.contains(edge.to())) {
                         pq.add(edge.to(), oldDist);
                     }
 
@@ -69,8 +68,10 @@ public class DijkstraShortestPathFinder<G extends Graph<V, E>, V, E extends Base
                         pq.changePriority(edge.to(), newDist);
                     }
                 }
-            }
+                known.add(explore);
+           }
         }
+        System.out.println("done with loop");
         return edgeTo;
     }
     @Override
@@ -83,7 +84,7 @@ public class DijkstraShortestPathFinder<G extends Graph<V, E>, V, E extends Base
         }
         List<E> edges = new ArrayList<>(); //why have to build backwards?
         V current = end;
-        while (current != start) {
+        while (!current.equals(start)) {
             E edge = spt.get(current);
             edges.add(edge);
             current = edge.from(); //when is edge.from() null??
