@@ -1,14 +1,12 @@
 package graphs.minspantrees;
 
 import disjointsets.DisjointSets;
-// import disjointsets.QuickFindDisjointSets;
 import disjointsets.UnionBySizeCompressingDisjointSets;
 import graphs.BaseEdge;
 import graphs.KruskalGraph;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
